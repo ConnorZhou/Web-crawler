@@ -1,0 +1,26 @@
+import urllib
+import urllib.request
+from bs4 import BeautifulSoup
+
+x= 0
+#url = 'https://www.dbmeinv.com/?pager_offset=1'
+headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 SE 2.X MetaSr 1.0'}
+req = urllib.request.Request(url, headers=headers)
+page = urllib.request.urlopen(req,timeout=20)
+contents = page.read().decode('utf8')
+
+def crawl(url):  
+    #print(contents)
+    soup = BeautifulSoup(contents,'html.parser')
+    image = soup.find_all('img')
+    for i in image:
+        title = i.get('title')
+        link = i.get('src')
+        #print(link)
+        global x
+        urllib.request.urlretrieve(link,'E:\meinv\{}.jpg'.format(x))
+        x += 1
+        print('正在下载第%s图片'%x)
+for page in range(1,6):
+    url = 'https://www.dbmeinv.com/?pager_offset={}'.format(page)
+    crawl(url)
