@@ -1,0 +1,67 @@
+import requests
+from bs4 import BeautifulSoup
+
+first_url = 'https://www.runoob.com/python/python-100-examples.html'
+
+headers = {
+    'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 SE 2.X MetaSr 1.0'
+}
+#发送请求
+r = requests.get(first_url,headers = headers).content.decode('utf-8')
+#print(r)
+
+#解析html文档
+soup = BeautifulSoup(r,'lxml')
+#print(type(soup))
+
+#查找每个练习的a链接的href属性的链接
+re_a = soup.find(id='content').ul.find_all('a')
+
+#创建一个列表保存url
+lis=[]
+for i in re_a:
+    #print(i.get('href'))#i.attrs['href']
+    lis.append(i.get('href'))
+
+'''
+    2.根据获取的每个练习的链接地址来请求每个练习获得页面内容
+'''
+for page in lis:
+    data = {}
+    url = requests.get('https://www.runoob.com'+page,headers=headers).content.decode('utf-8')
+    soup_url = BeautifulSoup(url,'lxml')
+
+    #查找练习内容
+    #a.查找标题
+    data['title'] = soup_url.find(id='content').h1.text
+    #print(title)
+    #b.查找题目
+    data['tm'] = soup_url.find(id='content').find_all('p')[1].text
+    #print(tm)
+    #c.查找程序分析
+    data['cf']= soup_url.find(id='content').find_all('p')[2].text
+    #print(cf)
+    #d.程序
+    #data['code'] = soup_url.find(class_='example_code').text
+    #print(code)
+    #这里第41题开始报错，因为不在class_='example_code'的class下
+    try:
+        data['code'] = soup_url.find(class_='example_code').text
+    except Exception as e:
+        data['code'] = soup_url.find(class_='navup').text
+
+    #e.程序结果
+    #data['result'] = soup_url.find(id="content").find_all('p')[4].text
+    #print(result)
+    #data['results'] = soup_url.find(id="content").find('pre').text
+    #print(results)
+    #此时，56会报错 因为是图片
+    print(data)
+
+    with open('E:/100py/100py.txt','a+',encoding='utf-8') as file:
+        file.write(data['title']+'\n')
+        file.write(data['tm']+'\n')
+        file.write(data['cf']+'\n')
+        file.write(data['code'] +'\n')
+        file.write('*'*50+'\n')
+
